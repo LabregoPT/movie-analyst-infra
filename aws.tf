@@ -95,13 +95,13 @@ resource "aws_security_group" "private-ssh" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     security_groups = [ aws_security_group.ssh_from_internet.id ]
   }
+  
   tags = {
     Name = "private-ssh"
   }

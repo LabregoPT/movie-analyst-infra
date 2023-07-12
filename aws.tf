@@ -43,7 +43,10 @@ resource "aws_route_table" "main-public" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.gateway.id
   }
-
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id = aws_internet_gateway.gateway.id
+  }
   tags = {
     Name = "main-public"
   }
@@ -69,14 +72,18 @@ resource "aws_security_group" "ssh_from_internet" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
   egress {
     from_port = 0
     to_port = 0
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
-
+  tags = {
+    name = "public-ssh"
+  }
 }
 
 resource "aws_security_group" "private-ssh" {
@@ -109,7 +116,7 @@ resource "aws_key_pair" "bastion_key" {
 ##Bastion Server
 resource "aws_instance" "bastion_host" {
   #vpc_id                 = aws_vpc.aws-cloud.id
-  ami                    = "ami-830c94e3"
+  ami                    = "ami-03f65b8614a860c29"
   instance_type          = "t2.micro"
   subnet_id = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.ssh_from_internet.id]

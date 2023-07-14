@@ -1,133 +1,129 @@
+# -------------------------------------------------------------------------
+# Main AWS Infra configuration
+# -------------------------------------------------------------------------
+
+## Main AWS Cloud network
 resource "aws_vpc" "aws-cloud" {
-  #Main AWS Cloud network
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
   enable_dns_hostnames = true
+  tags = {
+    Name = "Main VPC"
+  }
 }
+
+## VPC Subnets
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.aws-cloud.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-west-2a"
+  tags = {
+    Name = "Public Subnet 1"
+  }
+}
+
+resource "aws_subnet" "private_subnet_1" {
+  vpc_id                  = aws_vpc.aws-cloud.id
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = false
+  availability_zone       = "us-west-2a"
+  tags = {
+    Name = "Private Subnet 1"
+  }
+}
+
+resource "aws_subnet" "private_subnet_2" {
+  vpc_id                  = aws_vpc.aws-cloud.id
+  cidr_block              = "10.0.3.0/24"
+  map_public_ip_on_launch = false
+  availability_zone       = "us-west-2b"
+  tags = {
+    Name = "Private Subnet 2"
+  }
+}
+
+## Internet Gateway
 
 resource "aws_internet_gateway" "gateway" {
-  #Required to allow access from outside the VPC
-
   vpc_id = aws_vpc.aws-cloud.id
-
   tags = {
-    Name = "main"
+    Name = "Main Gateway"
   }
 }
 
-##VPC Subnets
-resource "aws_subnet" "public" {
-  vpc_id     = aws_vpc.aws-cloud.id
-  availability_zone = "us-west-2a"
-  cidr_block = "10.0.10.0/24"
-  map_public_ip_on_launch = true
+##Application Load Balancer
+resource "aws_lb" "load_balancer" {
   tags = {
-    name = "public subnet"
+    name = "Application Load Balancer"
   }
+  internal           = false
+  load_balancer_type = "application"
+
+  security_groups = [aws_security_group.alb_security_group.id]
+  subnets         = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
 }
 
-resource "aws_subnet" "private" {
-  vpc_id     = aws_vpc.aws-cloud.id
-  availability_zone = "us-west-2a"
-  cidr_block = "10.0.20.0/24"
-  map_public_ip_on_launch = false
-  tags = {
-    name = "private subnet"
-  }
-}
-
-# route tables
-resource "aws_route_table" "main-public" {
-  vpc_id = aws_vpc.aws-cloud.id
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.gateway.id
-  }
-  route {
-    ipv6_cidr_block = "::/0"
-    gateway_id = aws_internet_gateway.gateway.id
-  }
-  tags = {
-    Name = "main-public"
-  }
-}
-
-resource "aws_route_table_association" "main-public-1-a" {
-  subnet_id      = aws_subnet.public.id
-  route_table_id = aws_route_table.main-public.id
-}
-
-#-------------------------
-# Bastion Host Configuration
-#-------------------------
-
-
-
-##Security Group
-resource "aws_security_group" "ssh_from_internet" {
-  vpc_id = aws_vpc.aws-cloud.id
-  name = "ssh_from_internet"
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-  egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    ipv6_cidr_blocks = ["::/0"]
-  }
-  tags = {
-    name = "public-ssh"
-  }
-}
-
-resource "aws_security_group" "private-ssh" {
+##ALB Target Group
+resource "aws_lb_target_group" "front_target_group" {
+  name        = "front-facing-target-group"
+  target_type = "instance"
+  port        = 3000
+  protocol    = "HTTP"
   vpc_id      = aws_vpc.aws-cloud.id
-  name        = "private-ssh"
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+  tags = {
+    name = "Front Facing Target Group"
+  }
+}
+
+##ALB Security Group
+resource "aws_security_group" "alb_security_group" {
+  vpc_id = aws_vpc.aws-cloud.id
+  name   = "HTTP from Internet"
+  ingress {
+    from_port        = 3000
+    to_port          = 3000
+    protocol         = "TCP"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
   ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    security_groups = [ aws_security_group.ssh_from_internet.id ]
+    from_port        = 3001
+    to_port          = 3001
+    protocol         = "TCP"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
-  
+}
+
+##EC2 Instances to run server
+resource "aws_instance" "server_1" {
+  ami             = "ami-0c65adc9a5c1b5d7c"
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.private_subnet_1.id
+  security_groups = [aws_security_group.private_ssh.id]
+  key_name        = aws_key_pair.bastion_key.key_name
   tags = {
-    Name = "private-ssh"
+    Name = "Frontend Server #1"
   }
 }
-
-##SSH Keys to use
-resource "aws_key_pair" "bastion_key" {
-  key_name   = "bastion_key"
-  public_key = file("~/.ssh/id_rsa.pub")
-}
-
-##Bastion Server
-resource "aws_instance" "bastion_host" {
-  #vpc_id                 = aws_vpc.aws-cloud.id
-  ami                    = "ami-03f65b8614a860c29"
-  instance_type          = "t2.micro"
-  subnet_id = aws_subnet.public.id
-  vpc_security_group_ids = [aws_security_group.ssh_from_internet.id]
-  key_name               = aws_key_pair.bastion_key.key_name
-  #vpc_security_group_ids = [aws_security_group.ssh_from_internet.id]
+resource "aws_instance" "server_2" {
+  ami             = "ami-0c65adc9a5c1b5d7c"
+  instance_type   = "t2.micro"
+  subnet_id       = aws_subnet.private_subnet_2.id
+  security_groups = [aws_security_group.private_ssh.id]
+  key_name        = aws_key_pair.bastion_key.key_name
   tags = {
-    Name = "Bastion Host"
+    Name = "Frontend Server #2"
   }
 }
 
-##Print Bastion dns name output
-output "bastion_dns" {
-  value = aws_instance.bastion_host.public_dns
+##Attach Instances to ALBTG
+resource "aws_lb_target_group_attachment" "albtg_attachment_1" {
+  target_group_arn = aws_lb_target_group.front_target_group.arn
+  target_id        = aws_instance.server_1.id
+}
+resource "aws_lb_target_group_attachment" "albtg_attachment_2" {
+  target_group_arn = aws_lb_target_group.front_target_group.arn
+  target_id        = aws_instance.server_2.id
 }

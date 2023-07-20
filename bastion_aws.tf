@@ -90,3 +90,12 @@ resource "aws_instance" "bastion_host" {
 output "bastion_dns" {
   value = aws_instance.bastion_host.public_dns
 }
+output "server1_dns" {
+  value = aws_instance.server_1.public_dns
+}
+output "server2_dns" {
+  value = aws_instance.server_2.public_dns
+}
+output "alb_dns" {
+  value = aws_lb.load_balancer.dns_name
+}

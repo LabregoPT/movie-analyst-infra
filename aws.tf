@@ -13,9 +13,9 @@ resource "aws_vpc" "aws-cloud" {
 }
 
 ## VPC Subnets
-resource "aws_subnet" "public_subnet" {
+resource "aws_subnet" "public_subnet_1" {
   vpc_id                  = aws_vpc.aws-cloud.id
-  cidr_block              = "10.0.1.0/24"
+  cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "us-west-2a"
   tags = {
@@ -23,28 +23,17 @@ resource "aws_subnet" "public_subnet" {
   }
 }
 
-resource "aws_subnet" "private_subnet_1" {
+resource "aws_subnet" "public_subnet_2" {
   vpc_id                  = aws_vpc.aws-cloud.id
-  cidr_block              = "10.0.2.0/24"
-  map_public_ip_on_launch = false
-  availability_zone       = "us-west-2a"
-  tags = {
-    Name = "Private Subnet 1"
-  }
-}
-
-resource "aws_subnet" "private_subnet_2" {
-  vpc_id                  = aws_vpc.aws-cloud.id
-  cidr_block              = "10.0.3.0/24"
-  map_public_ip_on_launch = false
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
   availability_zone       = "us-west-2b"
   tags = {
-    Name = "Private Subnet 2"
+    Name = "Public Subnet 2"
   }
 }
 
 ## Internet Gateway
-
 resource "aws_internet_gateway" "gateway" {
   vpc_id = aws_vpc.aws-cloud.id
   tags = {
@@ -57,11 +46,24 @@ resource "aws_lb" "load_balancer" {
   tags = {
     name = "Application Load Balancer"
   }
+  name = "Load-Balancer"
   internal           = false
   load_balancer_type = "application"
 
   security_groups = [aws_security_group.alb_security_group.id]
-  subnets         = [aws_subnet.private_subnet_1.id, aws_subnet.private_subnet_2.id]
+  subnets         = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+}
+
+##ALB Listener
+resource "aws_lb_listener" "lb_listener" {
+  load_balancer_arn = aws_lb.load_balancer.arn
+  port = "3000"
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.front_target_group.arn
+  }
+  
 }
 
 ##ALB Target Group
@@ -100,9 +102,11 @@ resource "aws_security_group" "alb_security_group" {
 resource "aws_instance" "server_1" {
   ami             = "ami-0c65adc9a5c1b5d7c"
   instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.private_subnet_1.id
-  security_groups = [aws_security_group.private_ssh.id]
+  subnet_id       = aws_subnet.public_subnet_1.id
+  security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
+  #Initialization Script
+  user_data = file("./front-init-script.sh")
   tags = {
     Name = "Frontend Server #1"
   }
@@ -110,9 +114,11 @@ resource "aws_instance" "server_1" {
 resource "aws_instance" "server_2" {
   ami             = "ami-0c65adc9a5c1b5d7c"
   instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.private_subnet_2.id
-  security_groups = [aws_security_group.private_ssh.id]
+  subnet_id       = aws_subnet.public_subnet_2.id
+  security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
+  #Initialization Script
+  user_data = file("./front-init-script.sh")
   tags = {
     Name = "Frontend Server #2"
   }

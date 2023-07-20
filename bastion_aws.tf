@@ -20,12 +20,16 @@ resource "aws_route_table" "main-public" {
 }
 
 resource "aws_route_table_association" "main-public-1-a" {
-  subnet_id      = aws_subnet.public_subnet.id
+  subnet_id      = aws_subnet.public_subnet_1.id
   route_table_id = aws_route_table.main-public.id
 }
 
+resource "aws_route_table_association" "main-public-2-a" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.main-public.id
+}
 
-##Security Group
+##Security Groups
 resource "aws_security_group" "ssh_from_internet" {
   vpc_id      = aws_vpc.aws-cloud.id
   name        = "ssh_from_internet"
@@ -74,7 +78,7 @@ resource "aws_security_group" "private_ssh" {
 resource "aws_instance" "bastion_host" {
   ami                    = "ami-0c65adc9a5c1b5d7c"
   instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public_subnet.id
+  subnet_id              = aws_subnet.public_subnet_1.id
   vpc_security_group_ids = [aws_security_group.ssh_from_internet.id]
   key_name               = aws_key_pair.bastion_key.key_name
   tags = {

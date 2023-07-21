@@ -54,8 +54,8 @@ resource "aws_lb" "load_balancer" {
   subnets         = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
 }
 
-##ALB Listener
-resource "aws_lb_listener" "lb_listener" {
+##ALB Listeners
+resource "aws_lb_listener" "user_lb_listener" {
   load_balancer_arn = aws_lb.load_balancer.arn
   port = "3000"
   protocol = "HTTP"
@@ -63,7 +63,16 @@ resource "aws_lb_listener" "lb_listener" {
     type = "forward"
     target_group_arn = aws_lb_target_group.front_target_group.arn
   }
-  
+}
+
+resource "aws_lb_listener" "admin_lb_listener" {
+  load_balancer_arn = aws_lb.load_balancer.arn
+  port = "3001"
+  protocol = "HTTP"
+  default_action {
+    type = "forward"
+    target_group_arn = aws_lb_target_group.front_target_group.arn
+  }
 }
 
 ##ALB Target Group

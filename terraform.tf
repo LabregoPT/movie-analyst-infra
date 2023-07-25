@@ -5,7 +5,12 @@ terraform {
       version = "~> 4.16"
     }
   }
-
+  cloud {
+    organization = "LabregoPT"
+    workspaces {
+      name = "Movie-Analyst-Workspace"
+    }
+  }
   required_version = ">= 1.2.0"
 }
 

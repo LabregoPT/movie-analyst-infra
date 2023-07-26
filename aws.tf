@@ -127,8 +127,6 @@ resource "aws_instance" "server_1" {
   subnet_id       = aws_subnet.public_subnet_1.id
   security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
-  #Initialization Script
-  user_data = file("./front-init-script.sh")
   tags = {
     Name = "Frontend Server #1"
   }
@@ -139,8 +137,6 @@ resource "aws_instance" "server_2" {
   subnet_id       = aws_subnet.public_subnet_2.id
   security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
-  #Initialization Script
-  user_data = file("./front-init-script.sh")
   tags = {
     Name = "Frontend Server #2"
   }

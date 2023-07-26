@@ -81,7 +81,6 @@ resource "aws_instance" "bastion_host" {
   subnet_id              = aws_subnet.public_subnet_1.id
   vpc_security_group_ids = [aws_security_group.ssh_from_internet.id]
   key_name               = aws_key_pair.bastion_key.key_name
-  user_data              = file("./bastion-init.sh")
   tags = {
     Name = "Bastion Host"
   }

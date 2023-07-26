@@ -125,7 +125,7 @@ resource "aws_instance" "server_1" {
   ami             = "ami-0c65adc9a5c1b5d7c"
   instance_type   = "t2.micro"
   subnet_id       = aws_subnet.public_subnet_1.id
-  security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
+  vpc_security_group_ids = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
   tags = {
     Name = "Frontend Server #1"
@@ -135,7 +135,7 @@ resource "aws_instance" "server_2" {
   ami             = "ami-0c65adc9a5c1b5d7c"
   instance_type   = "t2.micro"
   subnet_id       = aws_subnet.public_subnet_2.id
-  security_groups = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
+  vpc_security_group_ids = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
   key_name        = aws_key_pair.bastion_key.key_name
   tags = {
     Name = "Frontend Server #2"

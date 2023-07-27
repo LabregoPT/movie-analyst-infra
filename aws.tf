@@ -129,6 +129,7 @@ resource "aws_instance" "server_1" {
   key_name        = aws_key_pair.bastion_key.key_name
   tags = {
     Name = "Frontend Server #1"
+    Layer = "front"
   }
 }
 resource "aws_instance" "server_2" {
@@ -139,6 +140,7 @@ resource "aws_instance" "server_2" {
   key_name        = aws_key_pair.bastion_key.key_name
   tags = {
     Name = "Frontend Server #2"
+    Layer = "front"
   }
 }
 

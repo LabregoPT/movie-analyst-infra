@@ -87,14 +87,8 @@ resource "aws_instance" "bastion_host" {
 }
 
 ##Print Bastion dns name output
-output "bastion_dns" {
-  value = aws_instance.bastion_host.public_dns
-}
-output "server1_dns" {
-  value = aws_instance.server_1.public_dns
-}
-output "server2_dns" {
-  value = aws_instance.server_2.public_dns
+output "aws_bastion_ip" {
+  value = aws_instance.bastion_host.public_ip
 }
 output "alb_dns" {
   value = aws_lb.load_balancer.dns_name

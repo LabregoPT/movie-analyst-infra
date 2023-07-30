@@ -14,7 +14,7 @@ resource "google_compute_instance" "bastion_gcp" {
   }
   zone = "us-west2-a"
   network_interface {
-    network = google_compute_network.vpc_network.self_link
+    network    = google_compute_network.vpc_network.self_link
     subnetwork = google_compute_subnetwork.subnetwork.self_link
     access_config {
     }
@@ -26,5 +26,5 @@ resource "google_compute_instance" "bastion_gcp" {
 }
 
 output "gcp_bastion_ip" {
-  value = google_compute_instance.bastion_gcp.network_interface
+  value = google_compute_instance.bastion_gcp.network_interface[0].access_config[0].nat_ip
 }

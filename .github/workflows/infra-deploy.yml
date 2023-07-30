@@ -1,0 +1,14 @@
+on: 
+    workflow_call:
+        secrets:
+            aws_access_key:
+                required: true
+            aws_secret_access_key:
+                required: true
+            gcp_credentials_file:
+                required: true
+jobs:
+    deploy-infrastructure:
+        runs-on: ubuntu-latest
+        steps:
+            - run: echo "Triggered from different workflow"

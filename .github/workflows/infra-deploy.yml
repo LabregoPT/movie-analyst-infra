@@ -40,7 +40,7 @@ jobs:
                 TF_VAR_aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
                 TF_VAR_gcp_credentials_file: "./gcp_key.json"
             - name: Save output to JSON file
-              run: terraform output -json > ./infra-output.json
+              run: terraform output -raw -json > ./infra-output.json
             - name: Upload infra output artifact
               uses: actions/upload-artifact@v3
               with:

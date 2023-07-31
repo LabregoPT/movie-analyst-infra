@@ -60,6 +60,9 @@ resource "google_compute_instance_template" "servers_template" {
     access_config {
     }
   }
+  labels = {
+    "layer" = "back"
+  }
   metadata = {
     "enable-oslogin" = "FALSE"
   }

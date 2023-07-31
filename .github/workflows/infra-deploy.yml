@@ -1,14 +1,39 @@
 on: 
     workflow_call:
         secrets:
+            tf_api_token:
+                required: true
             aws_access_key:
                 required: true
             aws_secret_access_key:
                 required: true
-            gcp_credentials_file:
+            gcp_credentials_json:
                 required: true
 jobs:
     deploy-infrastructure:
         runs-on: ubuntu-latest
         steps:
-            - run: echo "Triggered from different workflow"
+            - name: Checkout Infra code
+              uses: actions/checkout@v3
+              with:
+                repository: 'LabregoPT/movie-analyst-infra'
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v1
+              with:
+                cli_config_credentials_token: ${{ secrets.tf_api_token}}
+            - name: Create JSON file with the GCP Credentials
+              run: |
+                printenv AUTH > 'gcp_key.json'
+                pwd
+                dir
+              env:
+                AUTH: ${{ secrets.gcp_credentials_json }}
+            - name: Initialize Terraform
+              run: terraform init
+            - name: Plan execution
+              run: terraform plan -input=false
+              env:
+                TF_VAR_aws_access_key: ${{ secrets.aws_access_key }}
+                TF_VAR_aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+                TF_VAR_gcp_credentials_file: 
+                

@@ -24,8 +24,6 @@ jobs:
             - name: Create JSON file with the GCP Credentials
               run: |
                 printenv AUTH > 'gcp_key.json'
-                pwd
-                dir
               env:
                 AUTH: ${{ secrets.gcp_credentials_json }}
             - name: Initialize Terraform
@@ -35,5 +33,5 @@ jobs:
               env:
                 TF_VAR_aws_access_key: ${{ secrets.aws_access_key }}
                 TF_VAR_aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
-                TF_VAR_gcp_credentials_file: 
+                TF_VAR_gcp_credentials_file: "./gcp_key.json"
                 

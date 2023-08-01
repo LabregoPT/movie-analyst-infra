@@ -9,3 +9,7 @@ variable "aws_secret_access_key" {
 variable "gcp_credentials_file" {
   type = string
 }
+
+variable "azure_secret_key" {
+  type = string
+}

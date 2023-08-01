@@ -35,7 +35,7 @@ provider "google" {
 
 provider "azurerm" {
   client_id = "f9ae7ab3-61e5-406e-aa53-b5b7b5d3b2d2"
-  client_secret = "F2S8Q~ITbwPRZc2gl-IBenK7RGmioBD-8NCgWcHO"
+  client_secret = var.azure_secret_key
   tenant_id = "e994072b-523e-4bfe-86e2-442c5e10b244"
   subscription_id = "c1ac00ec-44b7-4df4-ba3c-9c9d15421774"
   features {

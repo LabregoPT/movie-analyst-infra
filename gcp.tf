@@ -116,3 +116,65 @@ resource "google_compute_health_check" "lb_hc" {
 output "lb_public_ip" {
   value = google_compute_global_address.lb_ip.address
 }
+
+## VPN Network config
+
+resource "google_compute_global_address" "vpn_address" {
+  name = "vpn-address"
+}
+
+resource "google_compute_ha_vpn_gateway" "ha_gateway" {
+  name       = "gcp-vpn-gateway"
+  network    = google_compute_network.vpc_network.id
+  region     = "us-west2"
+  stack_type = "IPV4_ONLY"
+  vpn_interfaces {
+  }
+}
+
+resource "google_compute_external_vpn_gateway" "gcp_external_gateway" {
+  name            = "az-external-gateway"
+  redundancy_type = "SINGLE_IP_INTERNALLY_REDUNDANT"
+  interface {
+    id = 0
+    ip_address = azurerm_public_ip.public_ip.ip_address
+  }
+}
+
+resource "google_compute_router" "vpn_router" {
+  name = "gcp-vpn-router"
+  network = google_compute_network.vpc_network.name
+  region = "us-west2"
+  bgp {
+    asn = 64512
+  }
+}
+
+resource "google_compute_vpn_tunnel" "ha_vpn_tunnel" {
+  region        = "us-west2"
+  name          = "gcp-azure-vpn-tunnel"
+  shared_secret = var.vpn_secret
+  vpn_gateway = google_compute_ha_vpn_gateway.ha_gateway.id
+  peer_external_gateway = google_compute_external_vpn_gateway.gcp_external_gateway.id
+  peer_external_gateway_interface = 0
+  router = google_compute_router.vpn_router.id
+  vpn_gateway_interface = 0
+}
+
+resource "google_compute_router_interface" "vpn_router_interface" {
+  name = "gcp-vpn-router-interface"
+  router = google_compute_router.vpn_router.name
+  region = "us-west2"
+  ip_range = "169.254.1.1/24"
+  vpn_tunnel = google_compute_vpn_tunnel.ha_vpn_tunnel.name
+}
+
+resource "google_compute_router_peer" "vpn_router_peer" {
+  name = "gcp-vpn-router-peer"
+  router = google_compute_router.vpn_router.name
+  interface = google_compute_router.vpn_router.name
+  region = "us-west2"
+  peer_ip_address = "169.254.1.45"
+  peer_asn = 64513
+  advertised_route_priority = 100
+}

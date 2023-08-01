@@ -21,3 +21,7 @@ variable "db_user" {
 variable "db_password" {
   type = string
 }
+
+variable "vpn_secret" {
+  type = string
+}

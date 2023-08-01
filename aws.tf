@@ -46,30 +46,30 @@ resource "aws_lb" "load_balancer" {
   tags = {
     name = "Application Load Balancer"
   }
-  name = "Load-Balancer"
+  name               = "Load-Balancer"
   internal           = false
   load_balancer_type = "application"
-  security_groups = [aws_security_group.alb_security_group.id]
-  subnets         = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
+  security_groups    = [aws_security_group.alb_security_group.id]
+  subnets            = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
 }
 
 ##ALB Listeners
 resource "aws_lb_listener" "user_lb_listener" {
   load_balancer_arn = aws_lb.load_balancer.arn
-  port = "3000"
-  protocol = "HTTP"
+  port              = "3000"
+  protocol          = "HTTP"
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.front_target_group.arn
   }
 }
 
 resource "aws_lb_listener" "admin_lb_listener" {
   load_balancer_arn = aws_lb.load_balancer.arn
-  port = "3001"
-  protocol = "HTTP"
+  port              = "3001"
+  protocol          = "HTTP"
   default_action {
-    type = "forward"
+    type             = "forward"
     target_group_arn = aws_lb_target_group.front_target_group.arn
   }
 }
@@ -122,24 +122,24 @@ resource "aws_security_group" "alb_security_group" {
 
 ##EC2 Instances to run server
 resource "aws_instance" "server_1" {
-  ami             = "ami-0c65adc9a5c1b5d7c"
-  instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.public_subnet_1.id
+  ami                    = "ami-0c65adc9a5c1b5d7c"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet_1.id
   vpc_security_group_ids = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
-  key_name        = aws_key_pair.bastion_key.key_name
+  key_name               = aws_key_pair.bastion_key.key_name
   tags = {
-    Name = "Frontend Server #1"
+    Name  = "Frontend Server #1"
     Layer = "front"
   }
 }
 resource "aws_instance" "server_2" {
-  ami             = "ami-0c65adc9a5c1b5d7c"
-  instance_type   = "t2.micro"
-  subnet_id       = aws_subnet.public_subnet_2.id
+  ami                    = "ami-0c65adc9a5c1b5d7c"
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public_subnet_2.id
   vpc_security_group_ids = [aws_security_group.private_ssh.id, aws_security_group.alb_security_group.id]
-  key_name        = aws_key_pair.bastion_key.key_name
+  key_name               = aws_key_pair.bastion_key.key_name
   tags = {
-    Name = "Frontend Server #2"
+    Name  = "Frontend Server #2"
     Layer = "front"
   }
 }

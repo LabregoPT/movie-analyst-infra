@@ -37,7 +37,7 @@ resource "google_compute_instance_group_manager" "backend_servers" {
   target_size        = 2
   version {
     instance_template = google_compute_instance_template.servers_template.self_link
-    name = "primary"
+    name              = "primary"
   }
   named_port {
     name = "http"
@@ -50,7 +50,7 @@ resource "google_compute_instance_group_manager" "backend_servers" {
 
 resource "google_compute_instance_template" "servers_template" {
   machine_type = "e2-micro"
-  tags = [ "allow-health-check" ]
+  tags         = ["allow-health-check"]
   disk {
     source_image = "ubuntu-os-cloud/ubuntu-2004-lts"
   }
@@ -84,8 +84,8 @@ resource "google_compute_global_forwarding_rule" "lb_forwarding_rule" {
 }
 
 resource "google_compute_target_http_proxy" "lb_target_proxy" {
-    name = "lb-target-http-proxy"
-    url_map = google_compute_url_map.lb_url_map.id
+  name    = "lb-target-http-proxy"
+  url_map = google_compute_url_map.lb_url_map.id
 }
 
 resource "google_compute_url_map" "lb_url_map" {
@@ -99,7 +99,7 @@ resource "google_compute_backend_service" "lb_backend_service" {
   port_name             = "http"
   load_balancing_scheme = "EXTERNAL"
   health_checks         = [google_compute_health_check.lb_hc.id]
-  
+
   backend {
     group          = google_compute_instance_group_manager.backend_servers.instance_group
     balancing_mode = "UTILIZATION"

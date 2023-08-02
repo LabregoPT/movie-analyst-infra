@@ -140,6 +140,9 @@ resource "azurerm_linux_virtual_machine" "db_vm" {
     sku       = "22_04-lts-gen2"
     version   = "latest"
   }
+  tags = {
+    "layer" = "database"
+  }
 
   computer_name  = "db-server"
   admin_username = "jhone"

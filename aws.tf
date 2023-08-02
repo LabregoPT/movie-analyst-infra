@@ -153,3 +153,7 @@ resource "aws_lb_target_group_attachment" "albtg_attachment_2" {
   target_group_arn = aws_lb_target_group.front_target_group.arn
   target_id        = aws_instance.server_2.id
 }
+
+output "frontend_lb_public_ip" {
+  value = aws_lb.load_balancer.dns_name
+}

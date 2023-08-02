@@ -48,7 +48,7 @@ resource "google_compute_instance_group_manager" "backend_servers" {
 }
 
 resource "google_compute_instance_template" "servers_template" {
-  name = "servers-template"
+  name         = "servers-template"
   machine_type = "e2-micro"
   tags         = ["allow-health-check"]
   disk {
@@ -116,7 +116,7 @@ resource "google_compute_health_check" "lb_hc" {
   }
 }
 
-output "lb_public_ip" {
+output "backend_lb_public_ip" {
   value = google_compute_global_address.lb_ip.address
 }
 

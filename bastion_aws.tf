@@ -90,6 +90,3 @@ resource "aws_instance" "bastion_host" {
 output "aws_bastion_ip" {
   value = aws_instance.bastion_host.public_ip
 }
-output "alb_dns" {
-  value = aws_lb.load_balancer.dns_name
-}

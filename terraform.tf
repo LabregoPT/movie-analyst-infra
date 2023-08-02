@@ -31,6 +31,7 @@ provider "aws" {
 provider "google" {
   project     = "boxwood-faculty-392406"
   credentials = file(var.gcp_credentials_file)
+  region = "us-west2"
 }
 
 provider "azurerm" {

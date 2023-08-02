@@ -26,7 +26,6 @@ resource "google_compute_firewall" "default_firewall" {
       "8080", "22"
     ]
   }
-  #target_tags = [ "allow-health-check" ]
   source_ranges = ["0.0.0.0/0"]
 }
 
@@ -49,6 +48,7 @@ resource "google_compute_instance_group_manager" "backend_servers" {
 }
 
 resource "google_compute_instance_template" "servers_template" {
+  name = "servers-template"
   machine_type = "e2-micro"
   tags         = ["allow-health-check"]
   disk {
@@ -65,6 +65,9 @@ resource "google_compute_instance_template" "servers_template" {
   }
   metadata = {
     "enable-oslogin" = "FALSE"
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -118,63 +121,35 @@ output "lb_public_ip" {
 }
 
 ## VPN Network config
-
-resource "google_compute_global_address" "vpn_address" {
-  name = "vpn-address"
+resource "google_compute_address" "gcp_vpn_ip" {
+  name = "gcp-vpn-ip"
 }
 
-resource "google_compute_ha_vpn_gateway" "ha_gateway" {
-  name       = "gcp-vpn-gateway"
-  network    = google_compute_network.vpc_network.id
-  region     = "us-west2"
-  stack_type = "IPV4_ONLY"
-  vpn_interfaces {
-  }
-}
-
-resource "google_compute_external_vpn_gateway" "gcp_external_gateway" {
-  name            = "az-external-gateway"
-  redundancy_type = "SINGLE_IP_INTERNALLY_REDUNDANT"
-  interface {
-    id = 0
-    ip_address = azurerm_public_ip.public_ip.ip_address
-  }
-}
-
-resource "google_compute_router" "vpn_router" {
-  name = "gcp-vpn-router"
+resource "google_compute_vpn_gateway" "az_gcp_vpn_gateway" {
+  name    = "az-gcp-vpn"
   network = google_compute_network.vpc_network.name
-  region = "us-west2"
-  bgp {
-    asn = 64512
-  }
 }
 
-resource "google_compute_vpn_tunnel" "ha_vpn_tunnel" {
-  region        = "us-west2"
-  name          = "gcp-azure-vpn-tunnel"
-  shared_secret = var.vpn_secret
-  vpn_gateway = google_compute_ha_vpn_gateway.ha_gateway.id
-  peer_external_gateway = google_compute_external_vpn_gateway.gcp_external_gateway.id
+resource "google_compute_forwarding_rule" "fr_esp" {
+  name   = "az-gcp-vpn-rule-esp"
+  target = google_compute_vpn_gateway.az_gcp_vpn_gateway.id
+}
+resource "google_compute_forwarding_rule" "fr_udp500" {
+  name   = "az-gcp-vpn-rule-udp4500"
+  target = google_compute_vpn_gateway.az_gcp_vpn_gateway.id
+}
+resource "google_compute_forwarding_rule" "fr_udp4500" {
+  name   = "az-gcp-vpn-rule-udp500"
+  target = google_compute_vpn_gateway.az_gcp_vpn_gateway.id
+}
+
+resource "google_compute_vpn_tunnel" "gcp_vpn_tunnel_1" {
+  name                            = "gcp-vpn-tunnel-1"
+  shared_secret                   = var.vpn_secret
+  local_traffic_selector          = ["0.0.0.0/0"]
   peer_external_gateway_interface = 0
-  router = google_compute_router.vpn_router.id
-  vpn_gateway_interface = 0
-}
-
-resource "google_compute_router_interface" "vpn_router_interface" {
-  name = "gcp-vpn-router-interface"
-  router = google_compute_router.vpn_router.name
-  region = "us-west2"
-  ip_range = "169.254.1.1/24"
-  vpn_tunnel = google_compute_vpn_tunnel.ha_vpn_tunnel.name
-}
-
-resource "google_compute_router_peer" "vpn_router_peer" {
-  name = "gcp-vpn-router-peer"
-  router = google_compute_router.vpn_router.name
-  interface = google_compute_router.vpn_router.name
-  region = "us-west2"
-  peer_ip_address = "169.254.1.45"
-  peer_asn = 64513
-  advertised_route_priority = 100
+  remote_traffic_selector         = ["0.0.0.0/0"]
+  target_vpn_gateway              = google_compute_vpn_gateway.az_gcp_vpn_gateway.id
+  vpn_gateway_interface           = 0
+  peer_ip                         = azurerm_public_ip.ip.ip_address
 }

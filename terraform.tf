@@ -42,3 +42,8 @@ provider "azurerm" {
   features {
   }
 }
+
+resource "local_file" "outputs" {
+  filename = "./infra-output.json"
+  content = "{  \"backend_lb_public_ip\": {    \"value\": \"${google_compute_global_address.lb_ip.address}\"  },  \"db_private_ip\": {    \"value\": \"${azurerm_linux_virtual_machine.db_vm.private_ip_address}\"  },  \"db_public_ip\": {    \"value\": \"${azurerm_linux_virtual_machine.db_vm.public_ip_address}\"  },  \"frontend_lb_public_ip\": {    \"value\": \"${aws_lb.load_balancer.dns_name}\"  }}"
+}

@@ -37,8 +37,8 @@ jobs:
                 TF_VAR_aws_access_key: ${{ secrets.aws_access_key }}
                 TF_VAR_aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
                 TF_VAR_gcp_credentials_file: "./gcp_key.json"
-                TF_VAR_AZURE_SECRET_KEY: ${{secrets.azure_secret_key}}
-                TF_VAR_VPN_SECRET: ${{secrets.vpn_secret}}
+                TF_VAR_azure_secret_key: ${{secrets.azure_secret_key}}
+                TF_VAR_vpn_secret: ${{secrets.vpn_secret}}
             - name: Apply execution
               run: terraform apply -auto-approve -input=false
               env:

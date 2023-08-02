@@ -14,14 +14,6 @@ variable "azure_secret_key" {
   type = string
 }
 
-variable "db_user" {
-  type = string
-}
-
-variable "db_password" {
-  type = string
-}
-
 variable "vpn_secret" {
   type = string
 }

@@ -9,6 +9,10 @@ on:
                 required: true
             gcp_credentials_json:
                 required: true
+            azure_secret_key:
+                required: true
+            vpn_secret:
+                required: true
 jobs:
     deploy-infrastructure:
         runs-on: ubuntu-latest
